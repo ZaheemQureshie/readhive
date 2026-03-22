@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Readability } from '@mozilla/readability';
 import { Window } from 'happy-dom';
-import DOMPurify from 'isomorphic-dompurify';
+import createDOMPurify from 'dompurify';
 
 export async function POST(req: Request) {
   try {
@@ -31,9 +31,38 @@ export async function POST(req: Request) {
     const window = new Window({ url });
     window.document.write(html);
     
+    // Initialize DOMPurify with happy-dom
+    // @ts-ignore
+    const DOMPurify = createDOMPurify(window as any);
+    
     // @ts-ignore - Readability expects a DOM document, which happy-dom provides
-    const reader = new Readability(window.document);
+    const reader = new Readability(window.document as any);
     const article = reader.parse();
+
+    if (!article) {
+      console.error('Readability failed to parse article');
+      return NextResponse.json({ error: 'Could not parse the article content' }, { status: 500 });
+    }
+
+    console.log('Article parsed successfully:', article.title);
+
+    // Sanitize the HTML content
+    const cleanHtml = DOMPurify.sanitize(article.content || '', {
+      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'ul', 'ol', 'li', 'b', 'i', 'strong', 'em', 'strike', 'code', 'hr', 'br', 'div', 'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'img', 'figure', 'figcaption', 'blockquote', 'video', 'source', 'iframe'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel', 'width', 'height', 'controls', 'allowfullscreen', 'frameborder'],
+    });
+
+    return NextResponse.json({
+      title: article.title,
+      byline: article.byline,
+      dir: article.dir,
+      content: cleanHtml,
+      textContent: article.textContent,
+      length: article.length,
+      excerpt: article.excerpt,
+      siteName: article.siteName,
+      url: url,
+    });
 
     if (!article) {
       console.error('Readability failed to parse article');
