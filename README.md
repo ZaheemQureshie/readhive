@@ -3,7 +3,6 @@
   
   <p style="font-size: 24px; font-weight: bold; text-transform: uppercase; margin-top: 0; color: #00FF00; background: #000; display: inline-block; padding: 4px 12px; border: 4px solid #000; box-shadow: 4px 4px 0px 0px #000;">Collect articles. Read freely.</p>
 </div>
----
 
 ## ⚡️ WHAT IS READHIVE?
 
