@@ -47,9 +47,3 @@ Storage is handled entirely via `localStorage`. This ensures zero server-side st
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) (Neo-brutalist theme)
 - **Extraction**: [@mozilla/readability](https://github.com/mozilla/readability)
 - **Icons**: [Lucide React](https://lucide.dev/)
-
----
-
-<div align="center">
-  <p>Built with ⚡️ by [Your Name/Handle]</p>
-</div>
