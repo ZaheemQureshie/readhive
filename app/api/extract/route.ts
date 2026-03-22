@@ -11,24 +11,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
+    console.log('Fetching URL:', url);
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       },
+      next: { revalidate: 3600 } // Add some caching for production
     });
 
     if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch the URL' }, { status: response.status });
+      console.error('Fetch failed with status:', response.status);
+      return NextResponse.json({ error: `Failed to fetch the URL: ${response.statusText}` }, { status: response.status });
     }
 
     const html = await response.text();
+    console.log('HTML received, length:', html.length);
+    
     const doc = new JSDOM(html, { url });
     const reader = new Readability(doc.window.document);
     const article = reader.parse();
 
     if (!article) {
-      return NextResponse.json({ error: 'Could not parse the article' }, { status: 500 });
+      console.error('Readability failed to parse article');
+      return NextResponse.json({ error: 'Could not parse the article content' }, { status: 500 });
     }
+
+    console.log('Article parsed successfully:', article.title);
 
     // Sanitize the HTML content
     const cleanHtml = DOMPurify.sanitize(article.content || '', {
