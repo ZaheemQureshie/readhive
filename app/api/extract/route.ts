@@ -24,20 +24,50 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Failed to fetch the URL: ${response.statusText}` }, { status: response.status });
     }
 
-    const html = await response.text();
+    let html = await response.text();
     console.log('HTML received, length:', html.length);
     
+    // Clean up HTML before passing to happy-dom to reduce noise and help Readability
+    // This is especially helpful for proxy sites like Freedium
+    const cleanHtmlForParsing = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
     // Use happy-dom instead of jsdom
     const window = new Window({ url });
-    window.document.write(html);
+    window.document.write(cleanHtmlForParsing);
     
     // Initialize DOMPurify with happy-dom
     // @ts-ignore
     const DOMPurify = createDOMPurify(window as any);
     
-    // @ts-ignore - Readability expects a DOM document, which happy-dom provides
-    const reader = new Readability(window.document as any);
-    const article = reader.parse();
+    // Try to parse the document
+    // @ts-ignore
+    let reader = new Readability(window.document as any);
+    let article = reader.parse();
+
+    // Fallback: If Readability fails, try to find a main container and parse its contents
+    if (!article) {
+      console.log('Readability failed on full document, trying common containers...');
+      const commonContainers = ['main', 'article', '.main-content', '#content', '.post-content', '.article-content'];
+      for (const selector of commonContainers) {
+        const container = window.document.querySelector(selector);
+        // Only try if the container has a significant amount of content
+        if (container && container.innerHTML.length > 200) {
+          console.log(`Trying extraction from container: ${selector}`);
+          const fallbackWindow = new Window({ url });
+          fallbackWindow.document.write(`<html><body>${container.innerHTML}</body></html>`);
+          
+          // @ts-ignore
+          const subReader = new Readability(fallbackWindow.document as any);
+          article = subReader.parse();
+          if (article) {
+            console.log(`Successfully extracted using fallback container: ${selector}`);
+            break;
+          }
+        }
+      }
+    }
 
     if (!article) {
       console.error('Readability failed to parse article');
