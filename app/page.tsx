@@ -27,7 +27,16 @@ export default function Home() {
         body: JSON.stringify({ url }),
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error(`Server returned non-JSON response (${res.status}). This often happens when a site blocks scraping or the API route crashes.`);
+      }
 
       if (!res.ok) {
         throw new Error(data.error || 'Failed to extract article');
