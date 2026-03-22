@@ -41,38 +41,6 @@ Storage is handled entirely via `localStorage`. This ensures zero server-side st
 
 ---
 
-## 🛠️ GETTING STARTED
-
-### Prerequisites
-- Node.js (v18 or later)
-- npm or yarn
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/[YOUR_USERNAME]/readhive.git
-   cd readhive
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Set up Environment Variables:**
-   Copy `.env.example` to `.env.local` and add your Gemini API Key (if needed for AI features).
-   ```bash
-   cp .env.example .env.local
-   ```
-
-4. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
-
----
-
 ## 🏗️ TECH STACK
 
 - **Framework**: [Next.js 15](https://nextjs.org/)
