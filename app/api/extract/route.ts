@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Readability } from '@mozilla/readability';
-import { JSDOM } from 'jsdom';
+import { Window } from 'happy-dom';
 import DOMPurify from 'isomorphic-dompurify';
 
 export async function POST(req: Request) {
@@ -27,8 +27,12 @@ export async function POST(req: Request) {
     const html = await response.text();
     console.log('HTML received, length:', html.length);
     
-    const doc = new JSDOM(html, { url });
-    const reader = new Readability(doc.window.document);
+    // Use happy-dom instead of jsdom
+    const window = new Window({ url });
+    window.document.write(html);
+    
+    // @ts-ignore - Readability expects a DOM document, which happy-dom provides
+    const reader = new Readability(window.document);
     const article = reader.parse();
 
     if (!article) {
